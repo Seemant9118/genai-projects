@@ -2,6 +2,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
+// chatbot (with streamable res)
 export async function POST(req) {
   try {
     const { messages } = await req.json();

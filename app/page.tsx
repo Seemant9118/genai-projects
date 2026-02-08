@@ -24,7 +24,17 @@ const projects: ProjectType[] = [
     image: "/projects/ai-chatbot.png",
     date: "01 Feb 2026",
     slug: "ai-chatbot-clone",
-    projectPath: `/chat`,
+    projectPath: `/chat-bot`,
+  },
+  {
+    id: "2",
+    title: "AI Mood-Based Song Recommender",
+    description:
+      "Designed an AI-powered music recommender using LLMs to detect compound moods (romantic–sad, chill–happy), energy levels, and language preference (Hindi/English), delivering personalized playlists with Spotify & YouTube search links and paginated recommendations.",
+    image: "/projects/song-recommender.png",
+    date: "08 Feb 2026",
+    slug: "ai-song-recommender",
+    projectPath: `/song-recommender-app`,
   },
 ];
 
@@ -46,6 +56,26 @@ export default function Home(): React.ReactElement {
         <p className="mt-2 text-sm text-gray-600 sm:text-base">
           A collection of the GenAI apps I’ve built ✨
         </p>
+
+        <p className="mt-3 max-w-3xl text-sm text-gray-600 sm:text-base">
+          This is my journey of learning and building with Generative AI — exploring LLMs,
+          prompt engineering, real-world use cases, and production-ready GenAI applications.
+          Each project reflects hands-on experimentation, problem-solving, and continuous learning.
+        </p>
+
+        <p className="mt-2 text-sm text-gray-600">
+          Want to know more about Seemant?{" "}
+          <a
+            href="https://www.linkedin.com/in/seemant-kamlapuri-b682331b5/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-blue-500 underline underline-offset-4 hover:text-blue-500"
+          >
+            Click here
+          </a>{" "}
+          to view my LinkedIn profile.
+        </p>
+
 
         {/* Responsive Grid */}
         <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

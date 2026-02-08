@@ -35,7 +35,7 @@ export default function ChatPage() {
 
             setIsStreaming(true);
 
-            const res = await fetch("/api/chat-stream", {
+            const res = await fetch("/api/chat-bot/chat-stream", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ messages: payloadMessages }),

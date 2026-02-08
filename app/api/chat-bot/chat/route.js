@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+// normal chat-bot (req,res)
 export async function POST(req) {
   try {
     const body = await req.json();
