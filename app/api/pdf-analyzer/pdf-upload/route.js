@@ -18,28 +18,30 @@ export async function POST(req) {
                 { status: 400 }
             );
         }
-        // 1. [EXTRACTION] extract text from pdf
-        const uint8Array = new Uint8Array(await file.arrayBuffer());
-        // problem: extract types is not fixed, it gives multiple formats array, string etc.
-        const { text, pageTexts } = await extractText(uint8Array);
-        // solution : normarlize the extracted text
-        const normalizedText = normalizeExtractedText(text);
 
-        // 2.[CLEANING] cleaned text
+        // 1. Extract PDF text
+        const uint8Array = new Uint8Array(await file.arrayBuffer());
+        const { text, pageTexts } = await extractText(uint8Array);
+
+        // Normalize outputs
+        const normalizedText = normalizeExtractedText(text);
+        const normalizedPageTexts = Array.isArray(pageTexts) ? pageTexts : [];
+
+        // 2. Clean text
         const cleanedText = cleanText(normalizedText);
 
-        // 3. [CHUNKING] chunking of cleanedText
+        // 3. Chunk text
         const chunks = chunkText(cleanedText);
 
-
-        // 4. [STORING] chunks storing in db 
+        // 4. Store chunks
         await storeChunks(chunks);
 
         return Response.json({
             success: true,
-            pages: pageTexts.length,
+            pages: normalizedPageTexts.length,
             chunksCount: chunks.length,
         });
+
     } catch (error) {
         console.error("PDF ERROR:", error);
 

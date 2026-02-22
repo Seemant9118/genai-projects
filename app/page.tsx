@@ -36,6 +36,16 @@ const projects: ProjectType[] = [
     slug: "ai-song-recommender",
     projectPath: `/song-recommender-app`,
   },
+  {
+    id: "3",
+    title: "AI PDF RAG System",
+    description:
+      "Built a production-grade Retrieval-Augmented Generation (RAG) system with PDF ingestion, intelligent chunking, embeddings, vector database search, similarity scoring, and a full chat UI. Includes hallucination safety, relevance thresholds, clean citations, and grounded answers — showcasing real-world GenAI engineering beyond tutorials.",
+    image: "/projects/pdf-rag.png",
+    date: "15 Feb 2026",
+    slug: "ai-pdf-rag-system",
+    projectPath: `/pdf-chat-bot`,
+  },
 ];
 
 export default function Home(): React.ReactElement {
