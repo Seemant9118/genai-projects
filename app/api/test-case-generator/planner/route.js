@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { safeJsonParse } from "../../../../lib/test-case-generator/safeJsonParse";
 
 export async function POST(req) {
     try {
@@ -9,6 +10,10 @@ export async function POST(req) {
                 { success: false, message: "Goal is required" },
                 { status: 400 }
             );
+        }
+
+        if (!process.env.GEMINI_API_KEY) {
+            throw new Error("GEMINI_API_KEY is not configured");
         }
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -48,11 +53,15 @@ export async function POST(req) {
         });
 
         const text = result.response.text();
-        const plan = JSON.parse(text);
+        const parsedPlan = safeJsonParse(text);
+
+        if (!parsedPlan.success) {
+            throw new Error("Planner returned invalid JSON");
+        }
 
         return Response.json({
             success: true,
-            plan,
+            plan: parsedPlan.data,
         });
     } catch (error) {
         return Response.json(

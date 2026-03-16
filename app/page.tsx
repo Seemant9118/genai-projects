@@ -46,6 +46,16 @@ const projects: ProjectType[] = [
     slug: "ai-pdf-rag-system",
     projectPath: `/pdf-chat-bot`,
   },
+  {
+    id: "4",
+    title: "AI Test Case Generator",
+    description:
+      "Built an AI-assisted QA automation flow that turns a plain-English feature into structured JSON test cases, converts them into a Playwright starter spec, and lets you download the generated .spec.ts file from the browser.",
+    image: "/projects/test-case-generator.svg",
+    date: "16 Mar 2026",
+    slug: "ai-test-case-generator",
+    projectPath: `/test-case-generator`,
+  },
 ];
 
 export default function Home(): React.ReactElement {
