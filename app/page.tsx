@@ -48,10 +48,10 @@ const projects: ProjectType[] = [
   },
   {
     id: "4",
-    title: "AI Test Case Generator",
+    title: "AI QA Automation Tool",
     description:
       "Built an AI-assisted QA automation flow that turns a plain-English feature into structured JSON test cases, converts them into a Playwright starter spec, and lets you download the generated .spec.ts file from the browser.",
-    image: "/projects/test-case-generator.svg",
+    image: "/projects/test-case-generator.png",
     date: "16 Mar 2026",
     slug: "ai-test-case-generator",
     projectPath: `/test-case-generator`,

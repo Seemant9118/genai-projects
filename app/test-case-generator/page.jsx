@@ -167,6 +167,7 @@ export default function TestCaseGeneratorPage() {
         setTestData(null);
         setPlaywrightCode("");
         setFilename("");
+
         setStatuses({
             agent: "loading",
             json: "idle",
@@ -179,13 +180,22 @@ export default function TestCaseGeneratorPage() {
         try {
             const agentResponse = await fetch("/api/test-case-generator/agent", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ feature }),
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    feature: feature.trim(),
+                }),
             });
 
             const agentPayload = await parseApiResponse(agentResponse);
 
+            if (!agentPayload?.data) {
+                throw new Error("Agent did not return test cases");
+            }
+
             setTestData(agentPayload.data);
+
             setStatuses({
                 agent: "success",
                 json: "success",
@@ -199,8 +209,13 @@ export default function TestCaseGeneratorPage() {
                 "/api/test-case-generator/convert_to_playwright",
                 {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(agentPayload.data),
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        feature: agentPayload.data.feature,
+                        testCases: agentPayload.data.testCases,
+                    }),
                 }
             );
 
@@ -208,12 +223,14 @@ export default function TestCaseGeneratorPage() {
 
             setPlaywrightCode(converterPayload.code);
             setFilename(converterPayload.filename);
+
             setStatuses({
                 agent: "success",
                 json: "success",
                 converter: "success",
                 download: "success",
             });
+
             setActiveTab("code");
 
             toast.success("Your Playwright starter spec is ready.");
@@ -285,213 +302,173 @@ export default function TestCaseGeneratorPage() {
                         </Link>
                     </Button>
 
-                    <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-                        <Card className="overflow-hidden border-slate-200 bg-white/85 shadow-xl shadow-orange-100/70">
-                            <CardHeader className="gap-4 border-b border-slate-200/80 bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.28),transparent_42%),linear-gradient(135deg,rgba(255,247,237,0.98),rgba(255,255,255,0.95))]">
-                                <div className="flex w-fit items-center gap-2 rounded-full border border-amber-200 bg-white/80 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-amber-800">
-                                    <Sparkles className="h-3.5 w-3.5" />
-                                    AI QA Automation Tool
-                                </div>
-                                <div className="space-y-3">
-                                    <CardTitle className="text-3xl leading-tight text-slate-950 sm:text-4xl">
-                                        Turn a feature brief into downloadable Playwright test scaffolding.
-                                    </CardTitle>
-                                    <CardDescription className="max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                                        This page follows the implementation already in the repo:
-                                        feature input goes to the AI test case agent, the agent
-                                        returns JSON test cases, the converter turns them into
-                                        Playwright, and you can download the generated
-                                        <span className="mx-1 font-medium text-slate-900">
-                                            .spec.ts
-                                        </span>
-                                        file from the UI.
-                                    </CardDescription>
-                                </div>
-                            </CardHeader>
-
-                            <CardContent className="space-y-5 pt-6">
-                                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                                    {FLOW_STEPS.map(({ id, title, description, Icon }) => {
-                                        const status =
-                                            id === "feature"
-                                                ? feature.trim()
-                                                    ? "success"
-                                                    : "idle"
-                                                : statuses[id];
-
-                                        return (
-                                            <div
-                                                key={id}
-                                                className={`rounded-3xl border p-4 transition ${getStepTone(status)}`}
-                                            >
-                                                <div className="flex items-center justify-between gap-3">
-                                                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/80">
-                                                        <Icon className="h-5 w-5" />
-                                                    </div>
-                                                    {getStatusIcon(status)}
-                                                </div>
-
-                                                <p className="mt-4 text-sm font-semibold">{title}</p>
-                                                <p className="mt-2 text-xs leading-5 opacity-80">
-                                                    {description}
-                                                </p>
-                                                <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.18em] opacity-90">
-                                                    {getStepStatusLabel(status)}
-                                                </p>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
-                                    <div className="space-y-3">
-                                        <label
-                                            htmlFor="feature"
-                                            className="text-sm font-semibold text-slate-900"
-                                        >
-                                            Feature description
-                                        </label>
-                                        <Textarea
-                                            id="feature"
-                                            rows={9}
-                                            value={feature}
-                                            disabled={isGenerating}
-                                            onChange={(event) => setFeature(event.target.value)}
-                                            placeholder="Example: Generate test coverage for a signup flow with email verification, password rules, duplicate account validation, and a success redirect to the welcome page."
-                                            className="resize-none rounded-3xl border-slate-300 bg-white px-4 py-4 text-sm leading-6 text-slate-900 shadow-none"
-                                        />
-                                        <div className="flex flex-col gap-3 sm:flex-row">
-                                            <Button
-                                                onClick={handleGenerate}
-                                                disabled={isGenerating}
-                                                className="h-11 rounded-full bg-slate-950 px-6 text-white hover:bg-slate-800"
-                                            >
-                                                {isGenerating ? (
-                                                    <>
-                                                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                                                        Building automation pack...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Sparkles className="h-4 w-4" />
-                                                        Generate automation pack
-                                                    </>
-                                                )}
-                                            </Button>
-
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => setFeature(SAMPLE_FEATURE)}
-                                                disabled={isGenerating}
-                                                className="h-11 rounded-full border-slate-300 bg-white"
-                                            >
-                                                Load sample feature
-                                            </Button>
-
-                                            <Button
-                                                variant="ghost"
-                                                onClick={handleReset}
-                                                disabled={isGenerating && !feature}
-                                                className="h-11 rounded-full text-slate-700"
-                                            >
-                                                Reset
-                                            </Button>
-                                        </div>
-                                    </div>
-
-                                    <div className="rounded-[28px] border border-slate-200 bg-slate-950 p-5 text-slate-100">
-                                        <p className="text-xs font-medium uppercase tracking-[0.24em] text-slate-400">
-                                            Generation snapshot
-                                        </p>
-                                        <div className="mt-4 grid gap-3">
-                                            <div className="rounded-2xl bg-white/5 p-4">
-                                                <p className="text-xs text-slate-400">Total test cases</p>
-                                                <p className="mt-2 text-3xl font-semibold">
-                                                    {testCases.length}
-                                                </p>
-                                            </div>
-                                            <div className="grid grid-cols-3 gap-3">
-                                                <div className="rounded-2xl bg-emerald-400/10 p-3">
-                                                    <p className="text-[11px] uppercase tracking-[0.2em] text-emerald-200">
-                                                        Positive
-                                                    </p>
-                                                    <p className="mt-2 text-xl font-semibold text-white">
-                                                        {positiveCount}
-                                                    </p>
-                                                </div>
-                                                <div className="rounded-2xl bg-rose-400/10 p-3">
-                                                    <p className="text-[11px] uppercase tracking-[0.2em] text-rose-200">
-                                                        Negative
-                                                    </p>
-                                                    <p className="mt-2 text-xl font-semibold text-white">
-                                                        {negativeCount}
-                                                    </p>
-                                                </div>
-                                                <div className="rounded-2xl bg-sky-400/10 p-3">
-                                                    <p className="text-[11px] uppercase tracking-[0.2em] text-sky-200">
-                                                        Edge
-                                                    </p>
-                                                    <p className="mt-2 text-xl font-semibold text-white">
-                                                        {edgeCount}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                                                <p className="text-xs text-slate-400">Download file</p>
-                                                <p className="mt-2 break-all text-sm text-slate-100">
-                                                    {filename || "Generated after Playwright conversion"}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {errorMessage ? (
-                                    <div className="rounded-3xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                                        {errorMessage}
-                                    </div>
-                                ) : null}
-                            </CardContent>
-                        </Card>
-
-                        <Card className="border-slate-200 bg-slate-950 text-white shadow-xl shadow-slate-300/40">
-                            <CardHeader>
-                                <CardTitle className="text-2xl">What ships from this flow</CardTitle>
-                                <CardDescription className="text-slate-300">
-                                    The current repo implementation is strongest on generation
-                                    and conversion, so the UI leans into that path and gives
-                                    quick previews before download.
+                    <Card className="overflow-hidden border-slate-200 bg-white/85 shadow-xl shadow-orange-100/70">
+                        <CardHeader className="border-b py-2 border-slate-200/80 bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.28),transparent_42%),linear-gradient(135deg,rgba(255,247,237,0.98),rgba(255,255,255,0.95))]">
+                            <div className="flex w-fit items-center gap-2 rounded-full border border-amber-200 bg-white/80 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-amber-800">
+                                <Sparkles className="h-3.5 w-3.5" />
+                                AI QA Automation Tool
+                            </div>
+                            <div className="space-y-3">
+                                <CardTitle className="text-3xl leading-tight text-slate-950 sm:text-4xl">
+                                    Turn a feature brief into downloadable Playwright test scaffolding.
+                                </CardTitle>
+                                <CardDescription className="max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+                                    This page follows the implementation already in the repo:
+                                    feature input goes to the AI test case agent, the agent
+                                    returns JSON test cases, the converter turns them into
+                                    Playwright, and you can download the generated
+                                    <span className="mx-1 font-medium text-slate-900">
+                                        .spec.ts
+                                    </span>
+                                    file from the UI.
                                 </CardDescription>
-                            </CardHeader>
+                            </div>
+                        </CardHeader>
 
-                            <CardContent className="space-y-4 text-sm leading-6 text-slate-200">
-                                <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
-                                    <p className="font-semibold text-white">Agent output</p>
-                                    <p className="mt-2">
-                                        Structured test cases with ids, types, step lists, and
-                                        expected results.
-                                    </p>
-                                </div>
+                        <CardContent className="space-y-5 pt-6">
+                            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                                {FLOW_STEPS.map(({ id, title, description, Icon }) => {
+                                    const status =
+                                        id === "feature"
+                                            ? feature.trim()
+                                                ? "success"
+                                                : "idle"
+                                            : statuses[id];
 
-                                <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
-                                    <p className="font-semibold text-white">Converter output</p>
-                                    <p className="mt-2">
-                                        A Playwright starter spec scaffold grouped by feature and
-                                        ready to refine with selectors and assertions.
-                                    </p>
-                                </div>
+                                    return (
+                                        <div
+                                            key={id}
+                                            className={`rounded-3xl border p-4 transition ${getStepTone(status)}`}
+                                        >
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/80">
+                                                    <Icon className="h-5 w-5" />
+                                                </div>
+                                                {getStatusIcon(status)}
+                                            </div>
 
-                                <div className="rounded-3xl border border-white/10 bg-linear-to-br from-amber-400/20 via-orange-300/10 to-transparent p-4">
-                                    <p className="font-semibold text-white">Current scope</p>
-                                    <p className="mt-2">
-                                        Planner and executor endpoints still look experimental, so
-                                        this UI focuses on the tested feature-to-spec pipeline you
-                                        described.
-                                    </p>
+                                            <p className="mt-4 text-sm font-semibold">{title}</p>
+                                            <p className="mt-2 text-xs leading-5 opacity-80">
+                                                {description}
+                                            </p>
+                                            <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.18em] opacity-90">
+                                                {getStepStatusLabel(status)}
+                                            </p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
+                                <div className="space-y-3">
+                                    <label
+                                        htmlFor="feature"
+                                        className="text-sm font-semibold text-slate-900"
+                                    >
+                                        Feature description
+                                    </label>
+                                    <Textarea
+                                        id="feature"
+                                        rows={9}
+                                        value={feature}
+                                        disabled={isGenerating}
+                                        onChange={(event) => setFeature(event.target.value)}
+                                        placeholder="Example: Generate test coverage for a signup flow with email verification, password rules, duplicate account validation, and a success redirect to the welcome page."
+                                        className="resize-none rounded-3xl border-slate-300 bg-white px-4 py-4 text-sm leading-6 text-slate-900 shadow-none"
+                                    />
+                                    <div className="flex flex-col gap-3 sm:flex-row">
+                                        <Button
+                                            onClick={handleGenerate}
+                                            disabled={isGenerating}
+                                            className="h-11 rounded-full bg-slate-950 px-6 text-white hover:bg-slate-800"
+                                        >
+                                            {isGenerating ? (
+                                                <>
+                                                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                                                    Building automation pack...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Sparkles className="h-4 w-4" />
+                                                    Generate automation pack
+                                                </>
+                                            )}
+                                        </Button>
+
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => setFeature(SAMPLE_FEATURE)}
+                                            disabled={isGenerating}
+                                            className="h-11 rounded-full border-slate-300 bg-white"
+                                        >
+                                            Load sample feature
+                                        </Button>
+
+                                        <Button
+                                            variant="ghost"
+                                            onClick={handleReset}
+                                            disabled={isGenerating && !feature}
+                                            className="h-11 rounded-full text-slate-700"
+                                        >
+                                            Reset
+                                        </Button>
+                                    </div>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    </div>
+                            </div>
+
+                            {errorMessage ? (
+                                <div className="rounded-3xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                                    {errorMessage}
+                                </div>
+                            ) : null}
+
+                            <div className="rounded-[28px] border border-slate-200 bg-slate-950 p-5 text-slate-100">
+                                <p className="text-xs font-medium uppercase tracking-[0.24em] text-slate-400">
+                                    Generation snapshot
+                                </p>
+                                <div className="mt-4 grid gap-3">
+                                    <div className="rounded-2xl bg-white/5 p-4">
+                                        <p className="text-xs text-slate-400">Total test cases</p>
+                                        <p className="mt-2 text-3xl font-semibold">
+                                            {testCases.length}
+                                        </p>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="rounded-2xl bg-emerald-400/10 p-3">
+                                            <p className="text-[11px] uppercase tracking-[0.2em] text-emerald-200">
+                                                Positive
+                                            </p>
+                                            <p className="mt-2 text-xl font-semibold text-white">
+                                                {positiveCount}
+                                            </p>
+                                        </div>
+                                        <div className="rounded-2xl bg-rose-400/10 p-3">
+                                            <p className="text-[11px] uppercase tracking-[0.2em] text-rose-200">
+                                                Negative
+                                            </p>
+                                            <p className="mt-2 text-xl font-semibold text-white">
+                                                {negativeCount}
+                                            </p>
+                                        </div>
+                                        <div className="rounded-2xl bg-sky-400/10 p-3">
+                                            <p className="text-[11px] uppercase tracking-[0.2em] text-sky-200">
+                                                Edge
+                                            </p>
+                                            <p className="mt-2 text-xl font-semibold text-white">
+                                                {edgeCount}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                                        <p className="text-xs text-slate-400">Download file</p>
+                                        <p className="mt-2 break-all text-sm text-slate-100">
+                                            {filename || "Generated after Playwright conversion"}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 <Card className="border-slate-200 bg-white/85 shadow-xl shadow-indigo-100/70">
